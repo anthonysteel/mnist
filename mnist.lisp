@@ -13,26 +13,12 @@
 ;;;    ........
 ;;;    xxxx     unsigned byte   ??               pixel
 
-
-;; Lists for testing
-(defvar l1 '((1 2 3 -10) (10 11 -15 -18) (-1 0 1 5) (1 1 1 -11)))
-(defvar l2 '((1 10 -5) (-10 11 -15 0) ((10 5) (1 3 4) -1)))
-(defvar l3 '((1 2 3 4) (5 6 7 8)))
-
 ;;; Applies ReLU function to atom or list
 (defun relu (x)
   (cond ((null x) ())
         ((listp x) (cons (relu (car x)) (relu (cdr x))))
         ((atom x) (max 0 x))
         (t (cons (max 0 (car x)) (relu (cdr x))))))
-
-;;; Load first MNIST image as a list
-(defun load-image (path)
-  (let ((data (open path :element-type '(unsigned-byte 8))))
-    (dotimes (i #x12) ;; Don't load magic number, number of images, rows and columns
-      (read-byte data))
-    (loop for i from 0 to (* 28 28)
-	  collect (read-byte data))))
 
 ;; Reshape a matrix into a matrix with dimensions n and m
 (defun reshape (mat m n)
@@ -48,3 +34,21 @@
   (let ((arr (flatten mat)))
     (reshape-list arr m n)))
 
+;;; Load first MNIST image as a list
+(defun load-mnist-image (path)
+  (defun load-mnist-data (path)
+    (let ((data (open path :element-type '(unsigned-byte 8))))
+      (dotimes (i #x12) ;; Don't load magic number, number of images, rows and columns
+	(read-byte data))
+      (loop for i from 0 to (* 28 28)
+	    collect (read-byte data))))
+  (reshape (load-mnist-data path) 28 28))
+
+;; Lists for testing
+(defvar l1 '((1 2 3 -10) (10 11 -15 -18) (-1 0 1 5) (1 1 1 -11)))
+(defvar l2 '((1 10 -5) (-10 11 -15 0) ((10 5) (1 3 4) -1)))
+(defvar l3 '((1 2 3 4) (5 6 7 8)))
+(defvar macbook-path "data/train-images-idx3-ubyte")
+(defvar macmini-path "Documents/mnist/data/train-images-idx3-ubyte")
+(defvar img (load-mnist-image macbook-path))
+(defvar img (load-mnist-image macmini-path))
