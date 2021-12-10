@@ -21,12 +21,11 @@
         (t (cons (max 0 (car x)) (relu (cdr x))))))
 
 ;;; Initialize an n x m matrix with random weights
-(defun init-rand-iter (n)
-  (cond ((= n 0) nil)
-	(t (cons (random 1.0)
-		 (init-rand-iter (- n 1))))))
-
 (defun init-rand-weights (n m)
+  (defun init-rand-iter (n)
+    (cond ((= n 0) nil)
+	  (t (cons (random 1.0)
+		   (init-rand-iter (- n 1))))))
   (cond ((= m 0) nil)
 	(t (cons (init-rand-iter (- n 1))
 		 (init-rand-weights n (- m 1))))))
@@ -58,6 +57,13 @@
       nil
       (cons (nth n (car mat)) (get-col n (cdr mat)))))
 
+;;; Scalar product two lists together, returns NULL if lists are
+;;; not of equal length
+(defun dot (l1 l2)
+  (cond ((not (= (length l1) (length l2))) nil)
+	((null l1) 0)
+	(t (+ (* (car l1) (car l2)) (dot (cdr l1) (cdr l2))))))
+
 ;;; Predicate to test if a matrix is a square matrix
 (defun squarep (mat)
   (= (first (size mat)) (second (size mat))))
@@ -66,20 +72,21 @@
 ;;; matrix or inner dimensions don't match
 (defun matmul (mat m2)
   (defun matmul-iter (m1 m2)
+    )
   (let ((m1-column-length (second (size m1)))
 	(m2-row-length (first (size m2))))
     (cond ((or (not (matrixp m1)) (not (matrixp m2))) nil)
 	  ((not (= m1-column-length m2-row-length)) nil)
 	  (t (matmul-iter m1 m2)))))
 
-;; Reshape a matrix into a matrix with dimensions n and m
+;;; Reshape a matrix into a matrix with dimensions n and m
 (defun reshape (mat n m)
-  ;; Flatten a matrix into an array
+  ;;; Flatten a matrix into an array
   (defun flatten (mat)
     (cond ((null mat) nil)
 	  ((listp mat) (append (flatten (car mat)) (flatten (cdr mat))))
 	  (t (list mat))))
-  ;; Reshape a list into a matrix with dimensions n and m
+  ;;; Reshape a list into a matrix with dimensions n and m
   (defun reshape-list (l n m)
     (cond ((or (= n 0) (null l)) nil)
 	  (t (cons (subseq l 0 m) (reshape-list (nthcdr n l) (- n 1) m)))))
@@ -101,6 +108,8 @@
 (defvar l1 '((1 2 3 -10) (10 11 -15 -18) (-1 0 1 5) (1 1 1 -11)))
 (defvar l2 '((1 10 -5) (-10 11 -15 0) ((10 5) (1 3 4) -1)))
 (defvar l3 '((1 2 3 4) (5 6 7 8)))
+(defvar la '(1 2 6 8))
+(defvar lb '(9 10 15 12))
 (defvar macbook-path "data/train-images-idx3-ubyte")
 (defvar macmini-path "Documents/mnist/data/train-images-idx3-ubyte")
 (defvar data (load-mnist-data macmini-path))
