@@ -20,28 +20,63 @@
         ((atom x) (max 0 x))
         (t (cons (max 0 (car x)) (relu (cdr x))))))
 
-;; Reshape a matrix into a matrix with dimensions n and m
-(defun reshape (mat m n)
-  ;; Flatten a matrix into an array
-  (defun flatten (mat)
-    (cond ((null mat) nil)
-	  ((listp mat) (append (flatten (car mat)) (flatten (cdr mat))))
-	  (t (list mat))))
-  ;; Reshape a list into a matrix with dimensions n and m
-  (defun reshape-list (l m n)
-    (cond ((or (= m 0) (null l)) nil)
-	  (t (cons (subseq l 0 n) (reshape-list (nthcdr n l) (- m 1) n)))))
-  (let ((arr (flatten mat)))
-    (reshape-list arr m n)))
+;;; Initialize an n x m matrix with random weights
+(defun init-rand-iter (n)
+  (cond ((= n 0) nil)
+	(t (cons (random 1.0)
+		 (init-rand-iter (- n 1))))))
+
+(defun init-rand-weights (n m)
+  (cond ((= m 0) nil)
+	(t (cons (init-rand-iter (- n 1))
+		 (init-rand-weights n (- m 1))))))
+
+;;; Checks if a list is a matrix. A list is considered a matrix when
+;;; the number of entries in each row is the same. For example:
+;;;   ((1 2 3) (4 5 6)) is a matrix
+;;;   ((1 2) (1)) is not
+(defun matrixp (m)
+  (if (null (cdr m))
+      (length (car m))
+      (and (= (length (car m))
+	      (length (cadr m)))
+	   (matrixp (cdr m)))))
+
+;;; Get the size of the matrix, returns NULL if not a matrix
+(defun size (m)
+  (if (matrixp m)
+      (list (length m) (length (car m)))
+      nil))
+
+;;; Multiply two matrices
+(defun matmul (m1 m2)
+
+;;; Flatten a matrix into an array
+(defun flatten (mat)
+  (cond ((null mat) nil)
+	((listp mat) (append (flatten (car mat)) (flatten (cdr mat))))
+	(t (list mat))))
+
+;;; Reshape a list into a matrix with dimensions n rows and m columns
+(defun reshape-list (l n m)
+   (cond ((or (= m 0) (null l)) nil)
+	 (t (cons (subseq l 0 m) (reshape-list (nthcdr m l) (- n 1) m)))))
+
+;;; Reshape a matrix into a matrix with dimensions n rows and m columns
+(defun reshape (mat n m)
+  (let ((l (flatten mat)))
+    (reshape-list l n m)))
+
+;;; Load byte data from MNIST file, currently loads first image
+(defun load-mnist-data (path)
+   (let ((data (open path :element-type '(unsigned-byte 8))))
+     (dotimes (i #x12) ;; Don't load magic number, number of images, rows and columns
+       (read-byte data))
+     (loop for i from 0 to (* 28 28)
+	   collect (read-byte data))))
 
 ;;; Load first MNIST image as a list
 (defun load-mnist-image (path)
-  (defun load-mnist-data (path)
-    (let ((data (open path :element-type '(unsigned-byte 8))))
-      (dotimes (i #x12) ;; Don't load magic number, number of images, rows and columns
-	(read-byte data))
-      (loop for i from 0 to (* 28 28)
-	    collect (read-byte data))))
   (reshape (load-mnist-data path) 28 28))
 
 ;; Lists for testing
