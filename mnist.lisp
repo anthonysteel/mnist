@@ -48,35 +48,53 @@
       (list (length m) (length (car m)))
       nil))
 
-;;; Multiply two matrices
-(defun matmul (m1 m2)
+;;; Get row, indexing from zero
+(defun get-row (n mat)
+  (nth n mat))
 
-;;; Flatten a matrix into an array
-(defun flatten (mat)
-  (cond ((null mat) nil)
-	((listp mat) (append (flatten (car mat)) (flatten (cdr mat))))
-	(t (list mat))))
+;;; Get column, indexing from zero
+(defun get-col (n mat)
+  (if (null mat)
+      nil
+      (cons (nth n (car mat)) (get-col n (cdr mat)))))
 
-;;; Reshape a list into a matrix with dimensions n rows and m columns
-(defun reshape-list (l n m)
-   (cond ((or (= m 0) (null l)) nil)
-	 (t (cons (subseq l 0 m) (reshape-list (nthcdr m l) (- n 1) m)))))
+;;; Predicate to test if a matrix is a square matrix
+(defun squarep (mat)
+  (= (first (size mat)) (second (size mat))))
+  
+;;; Multiply two matrices, returns NULL if either list is not a
+;;; matrix or inner dimensions don't match
+(defun matmul (mat m2)
+  (defun matmul-iter (m1 m2)
+  (let ((m1-column-length (second (size m1)))
+	(m2-row-length (first (size m2))))
+    (cond ((or (not (matrixp m1)) (not (matrixp m2))) nil)
+	  ((not (= m1-column-length m2-row-length)) nil)
+	  (t (matmul-iter m1 m2)))))
 
-;;; Reshape a matrix into a matrix with dimensions n rows and m columns
+;; Reshape a matrix into a matrix with dimensions n and m
 (defun reshape (mat n m)
-  (let ((l (flatten mat)))
-    (reshape-list l n m)))
-
-;;; Load byte data from MNIST file, currently loads first image
-(defun load-mnist-data (path)
-   (let ((data (open path :element-type '(unsigned-byte 8))))
-     (dotimes (i #x12) ;; Don't load magic number, number of images, rows and columns
-       (read-byte data))
-     (loop for i from 0 to (* 28 28)
-	   collect (read-byte data))))
+  ;; Flatten a matrix into an array
+  (defun flatten (mat)
+    (cond ((null mat) nil)
+	  ((listp mat) (append (flatten (car mat)) (flatten (cdr mat))))
+	  (t (list mat))))
+  ;; Reshape a list into a matrix with dimensions n and m
+  (defun reshape-list (l n m)
+    (cond ((or (= n 0) (null l)) nil)
+	  (t (cons (subseq l 0 m) (reshape-list (nthcdr n l) (- n 1) m)))))
+  (let ((arr (flatten mat)))
+    (reshape-list arr n m)))
 
 ;;; Load first MNIST image as a list
 (defun load-mnist-image (path)
+  ;;; Load byte data from MNIST file
+  (defun load-mnist-data (path)
+    (let ((data (open path :element-type '(unsigned-byte 8))))
+      (dotimes (i #x12) ;; Don't load magic number, number of images, rows and columns
+	(read-byte data))
+      (loop for i from 0 to (* 28 28)
+	    collect (read-byte data))))
   (reshape (load-mnist-data path) 28 28))
 
 ;; Lists for testing
@@ -85,5 +103,5 @@
 (defvar l3 '((1 2 3 4) (5 6 7 8)))
 (defvar macbook-path "data/train-images-idx3-ubyte")
 (defvar macmini-path "Documents/mnist/data/train-images-idx3-ubyte")
-(defvar img (load-mnist-image macbook-path))
+(defvar data (load-mnist-data macmini-path))
 (defvar img (load-mnist-image macmini-path))
