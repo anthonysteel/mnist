@@ -107,22 +107,31 @@
   (let ((arr (flatten mat)))
     (reshape-list arr n m)))
 
-;;; Load first MNIST image as a list
-(defun load-mnist-nth-image (n path)
+;;; Load nth MNIST image as a matrix
+(defun nth-image (n path)
   ;;; Load byte data from MNIST file
-  (defun load-mnist-data (path)
+  (defun load-data (path)
     (let ((data (open path :element-type '(unsigned-byte 8))))
-      (dotimes (i #x10) ;; Don't load magic number, number of images, rows and columns
+      (dotimes (i #x12) ;; Don't load magic number, number of images, rows and columns
 	(read-byte data))
       (dotimes (i (* n (* 28 28)))
 	(read-byte data))
       (loop for i from 0 to (* 28 28)
 	    collect (read-byte data))))
-  (reshape (load-mnist-data path) 28 28))
+  (reshape (load-data path) 28 28))
 
-;; Load random image from MNIST training set of 60,000 images
-(defun load-mnist-random-image (path)
-  (load-mnist-nth-image (random 60000) path))
+;;; Load random image from MNIST training set of 60,000 images
+(defun random-image (path)
+  (nth-image (random 60000) path))
+
+;;; Load nth label from MNIST label training set
+(defun nth-label (n path)
+  (let ((data (open path :element-type '(unsigned-byte 8))))
+    (dotimes (i #x8)
+      (read-byte data))
+    (dotimes (i (* n))
+      (read-byte data))
+    (read-byte data)))
 
 ;;; Draw image in terminal with 1's and 0's
 (defun draw-image (img)
@@ -145,8 +154,9 @@
 (setq m2 '((4 1 5 9) (2 2 8 10) (1 -1 -2 )))
 (setq layer1 (init-rand-weights 784 128))
 (setq layer2 (init-rand-weights 128 10))
-(defvar macbook-path "data/train-images-idx3-ubyte")
-(defvar macmini-path "Documents/mnist/data/train-images-idx3-ubyte")
+(defvar macbook-training-image-path "data/train-images-idx3-ubyte")
+(defvar macmini-training-image-path "Documents/mnist/data/train-images-idx3-ubyte")
+(defvar macbook-training-label-path "data/train-labels-idx1-ubyte")
 (defvar data (load-mnist-data macmini-path))
 (defvar img (load-mnist-nth-image 1 macbook-path))
 (setq img (load-mnist-nth-image 100 macbook-path))
