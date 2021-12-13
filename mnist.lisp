@@ -142,6 +142,14 @@
 			(write 0)))
 	   (terpri)))
 
+;;; Load nth image and label from MNIST training set
+(defun nth-image-and-label (n path)
+  (list (nth-image n path) (nth-label n path)))
+
+;;; Load random image and label from MNIST training set
+(defun random-image-and-label (path)
+  (nth-image-and-label (random 60000) path))
+
 ;; Lists for testing
 (defvar l1 '((1 2 3 -10) (10 11 -15 -18) (-1 0 1 5) (1 1 1 -11)))
 (defvar l2 '((1 10 -5) (-10 11 -15 0) ((10 5) (1 3 4) -1)))
