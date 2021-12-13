@@ -41,6 +41,10 @@
 	      (length (cadr m)))
 	   (matrixp (cdr m)))))
 
+;;; Predicate to test if a matrix is a square matrix
+(defun squarep (mat)
+  (= (first (size mat)) (second (size mat))))
+
 ;;; Get the size of the matrix, returns NULL if not a matrix
 (defun size (m)
   (if (matrixp m)
@@ -57,6 +61,10 @@
       nil
       (cons (nth n (car mat)) (get-col n (cdr mat)))))
 
+;;; Get ith and jth element from a matrix
+(defun get-elem (i j mat)
+  (nth j (get-row i mat)))
+
 ;;; Scalar product two lists together, returns NULL if lists are
 ;;; not of equal length
 (defun dot (l1 l2)
@@ -64,20 +72,26 @@
 	((null l1) 0)
 	(t (+ (* (car l1) (car l2)) (dot (cdr l1) (cdr l2))))))
 
-;;; Predicate to test if a matrix is a square matrix
-(defun squarep (mat)
-  (= (first (size mat)) (second (size mat))))
-  
 ;;; Multiply two matrices, returns NULL if either list is not a
 ;;; matrix or inner dimensions don't match
-(defun matmul (mat m2)
-  (defun matmul-iter (m1 m2)
-    )
+(defun matmul (m1 m2)
+  (defun matmul-iter-cols (m1 m2 m n)
+    (condo ((= n (second (size m2))) nil)
+	  (t (cons (dot (get-row m m1) (get-col n m2))
+		   (matmul-iter-cols m1 m2 m (+ n 1))))))
+  (defun matmul-iter-rows (m1 m2 m)
+    (cond ((= m (first (size m1))) nil)
+	  (t (cons (matmul-iter-cols m1 m2 m 0)
+		   (matmul-iter-rows m1 m2 (+ m 1))))))
   (let ((m1-column-length (second (size m1)))
 	(m2-row-length (first (size m2))))
     (cond ((or (not (matrixp m1)) (not (matrixp m2))) nil)
 	  ((not (= m1-column-length m2-row-length)) nil)
-	  (t (matmul-iter m1 m2)))))
+	  (t (matmul-iter-rows m1 m2 0)))))))
+
+;;; Swap in place the ith and jth elements of a list
+(defun swap-in-place (i j l)
+  (rotatef (nth i l) (nth j l)))
 
 ;;; Reshape a matrix into a matrix with dimensions n and m
 (defun reshape (mat n m)
@@ -110,6 +124,10 @@
 (defvar l3 '((1 2 3 4) (5 6 7 8)))
 (defvar la '(1 2 6 8))
 (defvar lb '(9 10 15 12))
+(defvar m1 '((1 2) (-1 5)))
+(defvar m2 '((4 1) (2 2)))
+(setq m1 '((1 2 4) (-1 5 5)))
+(setq m2 '((4 1 5 9) (2 2 8 10) (1 -1 -2 5)))
 (defvar macbook-path "data/train-images-idx3-ubyte")
 (defvar macmini-path "Documents/mnist/data/train-images-idx3-ubyte")
 (defvar data (load-mnist-data macmini-path))
