@@ -20,15 +20,15 @@
         ((atom x) (max 0 x))
         (t (cons (max 0 (car x)) (relu (cdr x))))))
 
-;;; Initialize an n x m matrix with random weights
-(defun init-rand-weights (n m)
+;;; Initialize an m x n matrix with random weights
+(defun init-rand-weights (m n)
   (defun init-rand-iter (n)
     (cond ((= n 0) nil)
 	  (t (cons (random 1.0)
 		   (init-rand-iter (- n 1))))))
   (cond ((= m 0) nil)
-	(t (cons (init-rand-iter (- n 1))
-		 (init-rand-weights n (- m 1))))))
+	(t (cons (init-rand-iter n)
+		 (init-rand-weights (- m 1) n)))))
 
 ;;; Checks if a list is a matrix. A list is considered a matrix when
 ;;; the number of entries in each row is the same. For example:
@@ -127,7 +127,9 @@
 (defvar m1 '((1 2) (-1 5)))
 (defvar m2 '((4 1) (2 2)))
 (setq m1 '((1 2 4) (-1 5 5)))
-(setq m2 '((4 1 5 9) (2 2 8 10) (1 -1 -2 5)))
+(setq m2 '((4 1 5 9) (2 2 8 10) (1 -1 -2 )))
+(setq layer1 (init-rand-weights 784 128))
+(setq layer2 (init-rand-weights 128 10))
 (defvar macbook-path "data/train-images-idx3-ubyte")
 (defvar macmini-path "Documents/mnist/data/train-images-idx3-ubyte")
 (defvar data (load-mnist-data macmini-path))
