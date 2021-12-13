@@ -108,15 +108,26 @@
     (reshape-list arr n m)))
 
 ;;; Load first MNIST image as a list
-(defun load-mnist-image (path)
+(defun load-mnist-nth-image (n path)
   ;;; Load byte data from MNIST file
   (defun load-mnist-data (path)
     (let ((data (open path :element-type '(unsigned-byte 8))))
-      (dotimes (i #x12) ;; Don't load magic number, number of images, rows and columns
+      (dotimes (i #x10) ;; Don't load magic number, number of images, rows and columns
+	(read-byte data))
+      (dotimes (i (* n (* 28 28)))
 	(read-byte data))
       (loop for i from 0 to (* 28 28)
 	    collect (read-byte data))))
   (reshape (load-mnist-data path) 28 28))
+
+;;; Draw image in terminal with 1's and 0's
+(defun draw-image (img)
+  (loop for row in img
+	do (loop for num in row
+		 do (if (> num 0)
+			(write 1)
+			(write 0)))
+	   (terpri)))
 
 ;; Lists for testing
 (defvar l1 '((1 2 3 -10) (10 11 -15 -18) (-1 0 1 5) (1 1 1 -11)))
@@ -133,4 +144,5 @@
 (defvar macbook-path "data/train-images-idx3-ubyte")
 (defvar macmini-path "Documents/mnist/data/train-images-idx3-ubyte")
 (defvar data (load-mnist-data macmini-path))
-(defvar img (load-mnist-image macmini-path))
+(defvar img (load-mnist-nth-image 1 macbook-path))
+(setq img (load-mnist-nth-image 100 macbook-path))
