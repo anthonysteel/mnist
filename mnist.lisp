@@ -120,6 +120,10 @@
 	    collect (read-byte data))))
   (reshape (load-mnist-data path) 28 28))
 
+;; Load random image from MNIST training set of 60,000 images
+(defun load-mnist-random-image (path)
+  (load-mnist-nth-image (random 60000) path))
+
 ;;; Draw image in terminal with 1's and 0's
 (defun draw-image (img)
   (loop for row in img
