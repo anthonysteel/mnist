@@ -1,6 +1,6 @@
 ;;; MNIST data set:
 ;;;    http://yann.lecun.com/exdb/mnist
-;;; Download training/test sets images and labels. Place in a ./data
+;;; Download training/test sets for images and labels. Place in ./data
 ;;;    Overview of idx3 filetype (see MNIST cite for more details):
 
 ;;;    [offset] [type]          [value]          [description]
@@ -22,12 +22,14 @@
 
 ;;; Initialize an m x n matrix with random weights
 (defun init-rand-weights (m n)
-  (defun init-rand-iter (n)
+  (defun random-from-range (start end)
+    (+ start (random (+ (- end start)))))
+  (defun init-rand-iter (m n)
     (cond ((= n 0) nil)
-	  (t (cons (random 1.0)
-		   (init-rand-iter (- n 1))))))
+	  (t (cons (/ (random-from-range -1.0 1.0) (* m n))
+		   (init-rand-iter m (- n 1))))))
   (cond ((= m 0) nil)
-	(t (cons (init-rand-iter n)
+	(t (cons (init-rand-iter m n)
 		 (init-rand-weights (- m 1) n)))))
 
 ;;; Checks if a list is a matrix. A list is considered a matrix when
@@ -41,15 +43,15 @@
 	      (length (cadr m)))
 	   (matrixp (cdr m)))))
 
-;;; Predicate to test if a matrix is a square matrix
-(defun squarep (mat)
-  (= (first (size mat)) (second (size mat))))
-
 ;;; Get the size of the matrix, returns NULL if not a matrix
 (defun size (m)
   (if (matrixp m)
       (list (length m) (length (car m)))
       nil))
+
+;;; Predicate to test if a matrix is a square matrix
+(defun squarep (mat)
+  (= (first (size mat)) (second (size mat))))
 
 ;;; Get row, indexing from zero
 (defun get-row (n mat)
@@ -76,7 +78,7 @@
 ;;; matrix or inner dimensions don't match
 (defun matmul (m1 m2)
   (defun matmul-iter-cols (m1 m2 m n)
-    (condo ((= n (second (size m2))) nil)
+    (cond ((= n (second (size m2))) nil)
 	  (t (cons (dot (get-row m m1) (get-col n m2))
 		   (matmul-iter-cols m1 m2 m (+ n 1))))))
   (defun matmul-iter-rows (m1 m2 m)
@@ -134,7 +136,7 @@
     (read-byte data)))
 
 ;;; Draw image in terminal with 1's and 0's
-(defun draw-image (img)
+(defun draw (img)
   (loop for row in img
 	do (loop for num in row
 		 do (if (> num 0)
@@ -150,10 +152,6 @@
 (defun random-image-and-label (image-path label-path)
   (nth-image-and-label (random 60000) image-path label-path))
 
-(defun forward (x layer &rest layers)
-  (cond ((null layers) (matmul layer x))
-	(t (matmul (car layers) (forward x (cdr layers)))))) 
-  
 ;; Lists for testing
 (defvar l1 '((1 2 3 -10) (10 11 -15 -18) (-1 0 1 5) (1 1 1 -11)))
 (defvar l2 '((1 10 -5) (-10 11 -15 0) ((10 5) (1 3 4) -1)))
@@ -169,9 +167,10 @@
 (defvar image-path "data/train-images-idx3-ubyte")
 (defvar image-path "Documents/mnist/data/train-images-idx3-ubyte")
 (defvar label-path "data/train-labels-idx1-ubyte")
+(defvar label-path "Documents/mnist/data/train-images-idx3-ubyte")
 (defvar data (load-mnist-data macmini-path))
-(defvar img (load-mnist-nth-image 1 macbook-path))
-(setq img (load-mnist-nth-image 100 macbook-path))
+(defvar img (load-mnist-nth-image 1 image-path))
+(setq img (load-mnist-nth-image 100 image-path))
 
 ;; Matrices for training
 (setq l1 (init-rand-weights 784 128))
