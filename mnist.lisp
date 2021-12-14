@@ -143,13 +143,17 @@
 	   (terpri)))
 
 ;;; Load nth image and label from MNIST training set
-(defun nth-image-and-label (n path)
-  (list (nth-image n path) (nth-label n path)))
+(defun nth-image-and-label (n image-path label-path)
+  (list (nth-image n image-path) (nth-label n label-path)))
 
 ;;; Load random image and label from MNIST training set
-(defun random-image-and-label (path)
-  (nth-image-and-label (random 60000) path))
+(defun random-image-and-label (image-path label-path)
+  (nth-image-and-label (random 60000) image-path label-path))
 
+(defun forward (x layer &rest layers)
+  (cond ((null layers) (matmul layer x))
+	(t (matmul (car layers) (forward x (cdr layers)))))) 
+  
 ;; Lists for testing
 (defvar l1 '((1 2 3 -10) (10 11 -15 -18) (-1 0 1 5) (1 1 1 -11)))
 (defvar l2 '((1 10 -5) (-10 11 -15 0) ((10 5) (1 3 4) -1)))
@@ -162,9 +166,14 @@
 (setq m2 '((4 1 5 9) (2 2 8 10) (1 -1 -2 )))
 (setq layer1 (init-rand-weights 784 128))
 (setq layer2 (init-rand-weights 128 10))
-(defvar macbook-training-image-path "data/train-images-idx3-ubyte")
-(defvar macmini-training-image-path "Documents/mnist/data/train-images-idx3-ubyte")
-(defvar macbook-training-label-path "data/train-labels-idx1-ubyte")
+(defvar image-path "data/train-images-idx3-ubyte")
+(defvar image-path "Documents/mnist/data/train-images-idx3-ubyte")
+(defvar label-path "data/train-labels-idx1-ubyte")
 (defvar data (load-mnist-data macmini-path))
 (defvar img (load-mnist-nth-image 1 macbook-path))
 (setq img (load-mnist-nth-image 100 macbook-path))
+
+;; Matrices for training
+(setq l1 (init-rand-weights 784 128))
+(setq l2 (init-rand-weights 128 10))
+(setq x (reshape (random-image image-path) 1 (* 28 28)))
