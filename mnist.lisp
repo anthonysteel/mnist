@@ -1,8 +1,12 @@
+;;; Solving MNIST from scratch
+;;;
 ;;; MNIST data set:
 ;;;    http://yann.lecun.com/exdb/mnist
+;;;
 ;;; Download training/test sets for images and labels. Place in ./data
+;;;
 ;;;    Overview of idx3 filetype (see MNIST cite for more details):
-
+;;;
 ;;;    [offset] [type]          [value]          [description]
 ;;;    0000     32 bit integer  0x00000803(2051) magic number
 ;;;    0004     32 bit integer  60000            number of images
@@ -20,6 +24,26 @@
         ((atom x) (max 0 x))
         (t (cons (max 0 (car x)) (relu (cdr x))))))
 
+;;; Initialize an n-element list with init-val
+(defun init-list-aux (l init-val n)
+  (if (= n 0)
+      l
+      (init-list-aux (cons init-val l) init-val (- n 1))))
+(defun init-list (init-val n)
+  (init-list-aux () init-val n))
+
+;;; Calculate LogSumExp
+(defun lse (x)
+  (let ((c (reduce #'max x))
+	(sum-list (lambda (l) (reduce #'+ l)))
+	(exp-list (lambda (l) (mapcar #'exp l)))
+	(minus-lists (lambda (l1 l2) (mapcar #'- l1 l2))))
+    (+ c (log (funcall sum-list
+		       (funcall exp-list
+				(funcall minus-lists
+					 (flatten x)
+					 (init-list c (length (flatten x))))))))))
+					 
 ;;; Initialize an m x n matrix with random weights
 (defun init-rand-weights (m n)
   (defun random-from-range (start end)
@@ -109,6 +133,13 @@
   (let ((arr (flatten mat)))
     (reshape-list arr n m)))
 
+;;; Forward pass
+(defun forward (x l1 l2 act)
+  (matmul (funcall act (matmul x l1)) l2))
+
+;;; Backward pass
+(defun backward  
+
 ;;; Load nth MNIST image as a matrix
 (defun nth-image (n path)
   ;;; Load byte data from MNIST file
@@ -162,17 +193,19 @@
 (defvar m2 '((4 1) (2 2)))
 (setq m1 '((1 2 4) (-1 5 5)))
 (setq m2 '((4 1 5 9) (2 2 8 10) (1 -1 -2 )))
-(setq layer1 (init-rand-weights 784 128))
-(setq layer2 (init-rand-weights 128 10))
+(defvar layer1 (init-rand-weights 784 128))
+(defvar layer2 (init-rand-weights 128 10))
 (defvar image-path "data/train-images-idx3-ubyte")
 (defvar image-path "Documents/mnist/data/train-images-idx3-ubyte")
 (defvar label-path "data/train-labels-idx1-ubyte")
 (defvar label-path "Documents/mnist/data/train-images-idx3-ubyte")
-(defvar data (load-mnist-data macmini-path))
+(defvar data (load-mnist-data image-path))
 (defvar img (load-mnist-nth-image 1 image-path))
 (setq img (load-mnist-nth-image 100 image-path))
 
 ;; Matrices for training
 (setq l1 (init-rand-weights 784 128))
 (setq l2 (init-rand-weights 128 10))
-(setq x (reshape (random-image image-path) 1 (* 28 28)))
+(defvar x (reshape (random-image image-path) 1 (* 28 28)))
+(setq x '(-0.06594814 -0.05582632 -0.06729704 -0.02831291  0.0
+          -0.040037   -0.05968991 -0.03470023 -0.03858397 -0.02367364))
